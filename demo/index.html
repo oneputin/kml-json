@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>kml-json demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+
+    <link rel="import" href="../kml-json.html">
+
+    <link rel="import" href="../../paper-styles/demo-pages.html">
+    <style>
+        iron-image {
+            background-color: lightgray;
+            margin: 1em;
+        }
+        
+        .horizontal-section {
+            max-width: 300px;
+            margin-bottom: 24px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Kml query</h1>
+    <div class="horizontal-section-container">
+        <template is="dom-bind" id="app">
+
+          <kml-json 
+            url = "[[url]]"
+            service = "[[params]]"
+            geojson = "{{kmlresponse}}">
+          </kml-json>
+
+          <template is="dom-repeat" items="[[kmlresponse.features]]">
+            <div class="horizontal-section">
+              <p>[[asstring(item)]]</p>
+            </div>
+          </template>
+
+        </template>
+    </div>
+
+    <script>
+        var app = document.querySelector('#app');
+        app.url = "http://iimaps.de/npp/if_slides.php";
+        app.params = {
+            "slide": "basin",
+            "mapclient": "ol2",
+            "cbox": "13,52"
+        };
+
+        app.asstring = function(item) {
+            // console.log("item=", item);
+            var txt = JSON.stringify(item.properties, null, '\n')
+            return txt;
+        };
+        
+        window.setTimeout(function() {
+                var pp = app.params;
+                pp["slide"] = "basintree";
+                app.params = {};
+                app.params = pp; 
+                // console.log("next query for ", app.params);
+            },
+            3000
+        );
+    </script>
+
+</body>
+
+</html>

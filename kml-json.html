@@ -1,0 +1,128 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="kml-json-api.html">
+
+<!--
+`kml-json`
+convert kml to geojson
+
+@demo demo/index.html 
+-->
+
+<dom-module id="kml-json">
+    <template>
+      <style>
+        :host {
+          display: block;
+        }
+      </style>
+      
+      <iron-ajax 
+        auto
+        url="[[url]]"
+        params="[[params]]"
+        handle-as="text"
+        last-response="{{kml}}"
+        debounce-duration="300">
+      </iron-ajax>
+
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'kml-json',
+
+            properties: {
+                /**
+                * 
+                */
+                url: {
+                    type: String,
+                    value: ''
+                },
+
+
+                /**
+                * 
+                */
+                params: {
+                    type: Object,
+                    value: function() {
+                        return {};
+                    }
+                },
+
+                /**
+                * 
+                */
+                service: {
+                    type: Object,
+                    value: function() {
+                        return {};
+                    }
+                },
+
+                /**
+                * 
+                */
+                kml: {
+                    type: String,
+                    value: ""
+                },
+
+                /**
+                * 
+                */
+                geojson: {
+                    type: Object,
+                    computed: 'makeGeojson(kml)',
+                    notify: true
+                },
+
+            },
+
+            observers: [
+                'ajaxparams(service.*, url)',
+                'logAction(geojson.*)'
+            ],
+
+            /**
+            * 
+            */
+            ajaxparams: function(service, url) {
+                // console.log("make params from service", service.value);
+                this.params = service.value;
+            },
+
+            /**
+            * 
+            */
+            makeGeojson: function(kml) {
+                let json = {}; // console.log("kml=",kml);
+                if (!kml || !Object.keys(kml).length) return json;
+
+                // 1. Convert string to DOM
+                kml = (new DOMParser()).parseFromString(kml, 'text/xml');
+                if (!kml) return json;
+
+                // 2. Use plugin to convert kml-DOM into geojson
+                json = toGeoJSON.kml(kml); 
+                if (json.features) {
+                    // console.log(json);
+                    return json; 
+                }
+            },
+
+            /**
+            * 
+            */
+            logAction: function(json) {
+                if (!json || !Object.keys(json).length) return;
+                var geojson = json.value;
+                // console.log("LOG: url=" + this.url, "with", this.params, "output:", geojson);
+            }
+
+        });
+    </script>
+</dom-module>
