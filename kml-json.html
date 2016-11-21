@@ -20,7 +20,7 @@ convert kml to geojson
       <iron-ajax 
         auto
         url="[[url]]"
-        params="[[params]]"
+        params="[[_params]]"
         handle-as="text"
         last-response="{{kml}}"
         debounce-duration="300">
@@ -35,8 +35,8 @@ convert kml to geojson
 
             properties: {
                 /**
-                * 
-                */
+                 * 
+                 */
                 url: {
                     type: String,
                     value: ''
@@ -44,9 +44,9 @@ convert kml to geojson
 
 
                 /**
-                * 
-                */
-                params: {
+                 * 
+                 */
+                _params: {
                     type: Object,
                     value: function() {
                         return {};
@@ -54,8 +54,8 @@ convert kml to geojson
                 },
 
                 /**
-                * 
-                */
+                 * 
+                 */
                 service: {
                     type: Object,
                     value: function() {
@@ -64,16 +64,16 @@ convert kml to geojson
                 },
 
                 /**
-                * 
-                */
+                 * 
+                 */
                 kml: {
                     type: String,
                     value: ""
                 },
 
                 /**
-                * 
-                */
+                 * 
+                 */
                 geojson: {
                     type: Object,
                     computed: 'makeGeojson(kml)',
@@ -88,16 +88,16 @@ convert kml to geojson
             ],
 
             /**
-            * 
-            */
+             * 
+             */
             ajaxparams: function(service, url) {
                 // console.log("make params from service", service.value);
-                this.params = service.value;
+                this._params = service.value; // console.log(this._params);
             },
 
             /**
-            * 
-            */
+             * 
+             */
             makeGeojson: function(kml) {
                 let json = {}; // console.log("kml=",kml);
                 if (!kml || !Object.keys(kml).length) return json;
@@ -107,16 +107,18 @@ convert kml to geojson
                 if (!kml) return json;
 
                 // 2. Use plugin to convert kml-DOM into geojson
-                json = toGeoJSON.kml(kml); 
+                json = toGeoJSON.kml(kml);
                 if (json.features) {
+                    json.kml = kml;
+                    json.time = Date.now();
                     // console.log(json);
-                    return json; 
+                    return json;
                 }
             },
 
             /**
-            * 
-            */
+             * 
+             */
             logAction: function(json) {
                 if (!json || !Object.keys(json).length) return;
                 var geojson = json.value;
