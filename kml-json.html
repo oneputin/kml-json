@@ -4,7 +4,7 @@
 
 <!--
 `kml-json`
-convert kml to geojson
+convert kml to geojson. 
 
 @demo demo/index.html 
 -->
@@ -99,21 +99,35 @@ convert kml to geojson
              * 
              */
             makeGeojson: function(kml) {
-                let json = {}; // console.log("kml=",kml);
+                let json = {};
                 if (!kml || !Object.keys(kml).length) return json;
 
                 // 1. Convert string to DOM
+                // 2. Use plugin to convert kml-DOM into geojson
                 kml = (new DOMParser()).parseFromString(kml, 'text/xml');
                 if (!kml) return json;
-
-                // 2. Use plugin to convert kml-DOM into geojson
-                json = toGeoJSON.kml(kml);
-                if (json.features) {
-                    json.kml = kml;
-                    json.time = Date.now();
-                    // console.log(json);
-                    return json;
+                // console.log("dom-element:", kml.documentElement.tagName, kml.documentElement);    return;
+                if (kml.documentElement.tagName == "kml") {
+                    console.log("kml:", kml);
+                    json = toGeoJSON.kml(kml);
+                    if (json.features) {
+                        json.dom = kml;
+                        json.time = Date.now();
+                    }
+                } else if (kml.documentElement.tagName == "gpx") {
+                    console.log("gpx:", kml);
+                    json = toGeoJSON.gpx(kml);
+                    if (json.features) {
+                        json.dom = kml;
+                        json.time = Date.now();
+                    }
+                } else {
+                    console.log("??Unknown Format??:", kml);
+                    return !
                 }
+
+                console.log("JSON:", json);
+                return json;
             },
 
             /**

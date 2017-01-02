@@ -1,0 +1,36 @@
+[{
+        "title": "slidedata",
+        "type": "kml",
+        "url": "http://iimaps.de/npp/if_slides.php",
+        "params": {
+            "slide": "basin",
+            "mapclient": "ol2",
+            "cbox": "13,52"
+        }
+    },
+    {
+        "title": "worldrecords",
+        "type": "gpx",
+        "url": "http://iimaps.de/data/gps/world/gpx/Current.gpx"
+    },
+    {
+        "title": "kamerundata",
+        "type": "gpx",
+        "url": "http://iimaps.de/data/gps/kamerun/gpx/Current.gpx"
+    },
+    {
+        "title": "praharecords",
+        "type": "gpx",
+        "url": "http://iimaps.de/data/gps/prag/gpx/2012-05-01 10.16.20 Day.gpx"
+    },
+    {
+        "title": "Mauerweg1",
+        "type": "gpx",
+        "url": "gpx/mauerweg1.gpx"
+    },
+    {
+        "title": "AustinGreenbelt",
+        "type": "gpx",
+        "url": "gpx/AustinGreenbelt-Southwest.gpx"
+    }
+]

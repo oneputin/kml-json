@@ -10,6 +10,11 @@
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
 
+    <link rel="import" href="../../iron-ajax/iron-ajax.html">
+    <link rel="import" href="../../paper-dropdown-menu/paper-dropdown-menu.html">
+    <link rel="import" href="../../paper-listbox/paper-listbox.html">
+    <link rel="import" href="../../paper-item/paper-item.html">
+
     <link rel="import" href="../kml-json.html">
 
     <link rel="import" href="../../paper-styles/demo-pages.html">
@@ -25,6 +30,8 @@
         }
     </style>
 
+
+
 </head>
 
 <body>
@@ -33,45 +40,72 @@
     <div class="horizontal-section-container">
         <template is="dom-bind" id="app">
 
-          <kml-json 
-            url = "[[url]]"
-            service = "[[params]]"
-            geojson = "{{kmlresponse}}">
-          </kml-json>
+            <iron-ajax
+                auto
+                url="datasources.json"
+                handle-as="json"
+                on-response="handleResponse"
+                debounce-duration="300"></iron-ajax>
 
-          <template is="dom-repeat" items="[[kmlresponse.features]]">
-            <div class="horizontal-section">
-              <p>[[asstring(item)]]</p>
-            </div>
-          </template>
+            <paper-dropdown-menu label="GPX datasources">
+                <paper-listbox class="dropdown-content" selected="0" on-iron-select="selectedurl" attr-for-selected="url">
+                    <template is="dom-repeat" items="{{sources}}">
+                        <paper-item url="{{item.url}}">
+                            {{item.title}}
+                        </paper-item>
+                    </template>
+        </paper-listbox>
+        </paper-dropdown-menu>
+
+        <kml-json url="[[url]]" service="[[params]]" geojson="{{jsonresponse}}"></kml-json>
+
+        <template is="dom-repeat" items="[[jsonresponse.features]]">
+                <div class="horizontal-section">
+                    <p>[[asstring(item)]]</p>
+                </div>
+            </template>
 
         </template>
+
     </div>
 
     <script>
         var app = document.querySelector('#app');
-        app.url = "http://iimaps.de/npp/if_slides.php";
-        app.params = {
+
+        app.params = {};
+
+        app.indexurl = "datasources.json";
+        //app.url = "http://iimaps.de/npp/if_slides.php";
+        /*app.params = {
             "slide": "basin",
             "mapclient": "ol2",
             "cbox": "13,52"
-        };
+        };*/
 
         app.asstring = function(item) {
             // console.log("item=", item);
             var txt = JSON.stringify(item.properties, null, '\n')
             return txt;
         };
-        
+
         window.setTimeout(function() {
                 var pp = app.params;
                 pp["slide"] = "basintree";
                 app.params = {};
-                app.params = pp; 
+                // app.params = pp;
                 // console.log("next query for ", app.params);
             },
             3000
         );
+
+        app.handleResponse = function(ajaxresponse) {
+            this.sources = ajaxresponse.detail.response;
+        };
+
+        app.selectedurl = function(e) {
+            console.log("selectedurl:", e.detail.item.url);
+            this.url = e.detail.item.url;
+        }
     </script>
 
 </body>
