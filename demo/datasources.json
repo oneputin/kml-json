@@ -6,27 +6,76 @@
             "slide": "basin",
             "mapclient": "ol2",
             "cbox": "13,52"
+        },
+        "query": {
+            "tags": "Polygon"
         }
     },
+
+    {
+        "title": "kml-tracks",
+        "type": "kml",
+        "url": "gpx/kml-track.kml",
+        "query": {
+            "tags": "Track"
+        }
+    },
+
     {
         "title": "worldrecords",
         "type": "gpx",
-        "url": "http://iimaps.de/data/gps/world/gpx/Current.gpx"
+        "url": "gpx/world.gpx",
+        "query": {
+            "tags": "Track"
+        }
     },
+
     {
-        "title": "kamerundata",
+        "title": "kamerun-all",
         "type": "gpx",
-        "url": "http://iimaps.de/data/gps/kamerun/gpx/Current.gpx"
+        "url": "gpx/kamerun.gpx"
     },
+
     {
-        "title": "praharecords",
+        "title": "kamerun-tracks",
         "type": "gpx",
-        "url": "http://iimaps.de/data/gps/prag/gpx/2012-05-01 10.16.20 Day.gpx"
+        "url": "gpx/kamerun.gpx",
+        "query": {
+            "tags": "Track"
+        }
+    },
+
+    {
+        "title": "kamerun-waypoints",
+        "type": "gpx",
+        "url": "gpx/kamerun.gpx",
+        "query": {
+            "tags": "Waypoint"
+        }
+    },
+
+    {
+        "title": "praha-data",
+        "type": "gpx",
+        "url": "gpx/praha.gpx",
+        "query": {
+            "tags": "Track"
+        }
     },
     {
         "title": "Mauerweg1",
         "type": "gpx",
         "url": "gpx/mauerweg1.gpx"
+    },
+    {
+        "title": "Mauerweg2",
+        "type": "gpx",
+        "url": "gpx/mauerweg2.gpx"
+    },
+    {
+        "title": "Mauerweg3",
+        "type": "gpx",
+        "url": "gpx/mauerweg3.gpx"
     },
     {
         "title": "AustinGreenbelt",

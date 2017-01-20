@@ -36,7 +36,7 @@
 
 <body>
 
-    <h1>Kml query</h1>
+    <h1>Kml/Gpx data import</h1>
     <div class="horizontal-section-container">
         <template is="dom-bind" id="app">
 
@@ -48,16 +48,16 @@
                 debounce-duration="300"></iron-ajax>
 
             <paper-dropdown-menu label="GPX datasources">
-                <paper-listbox class="dropdown-content" selected="0" on-iron-select="selectedurl" attr-for-selected="url">
+                <paper-listbox class="dropdown-content" selected="0" on-iron-select="selectedurl" attr-for-selected="id">
                     <template is="dom-repeat" items="{{sources}}">
-                        <paper-item url="{{item.url}}">
+                        <paper-item id="{{item.title}}">
                             {{item.title}}
                         </paper-item>
                     </template>
         </paper-listbox>
         </paper-dropdown-menu>
 
-        <kml-json url="[[url]]" service="[[params]]" geojson="{{jsonresponse}}"></kml-json>
+        <kml-json url="[[url]]" service="[[service]]" query="[[query]]" geojson="{{jsonresponse}}"></kml-json>
 
         <template is="dom-repeat" items="[[jsonresponse.features]]">
                 <div class="horizontal-section">
@@ -72,15 +72,12 @@
     <script>
         var app = document.querySelector('#app');
 
-        app.params = {};
+        //app.url = "http://iimaps.de/npp/if_slides.php";
+
+        app.service = {};
+        app.query = {};
 
         app.indexurl = "datasources.json";
-        //app.url = "http://iimaps.de/npp/if_slides.php";
-        /*app.params = {
-            "slide": "basin",
-            "mapclient": "ol2",
-            "cbox": "13,52"
-        };*/
 
         app.asstring = function(item) {
             // console.log("item=", item);
@@ -88,23 +85,21 @@
             return txt;
         };
 
-        window.setTimeout(function() {
-                var pp = app.params;
-                pp["slide"] = "basintree";
-                app.params = {};
-                // app.params = pp;
-                // console.log("next query for ", app.params);
-            },
-            3000
-        );
-
         app.handleResponse = function(ajaxresponse) {
             this.sources = ajaxresponse.detail.response;
         };
 
         app.selectedurl = function(e) {
-            console.log("selectedurl:", e.detail.item.url);
-            this.url = e.detail.item.url;
+            console.log("selectedurl:", e.detail.item.id);
+            var title = e.detail.item.id;
+            this.sources.forEach(function(s) {
+                if (s.title == title) {
+                    console.log("selected source", s);
+                    this.url = s.url;
+                    this.service = s.params ? s.params : {};
+                    this.query = s.query ? s.query : {};
+                }
+            }.bind(this));
         }
     </script>
 
