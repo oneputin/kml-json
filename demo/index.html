@@ -59,7 +59,8 @@
 
         <kml-json url="[[url]]" service="[[service]]" query="[[query]]" geojson="{{jsonresponse}}"></kml-json>
 
-        <template is="dom-repeat" items="[[jsonresponse.features]]">
+        <!--<template is="dom-repeat" items="[[jsonresponse.features]]">-->
+        <template is="dom-repeat" items="[[jsonresponse]]">
                 <div class="horizontal-section">
                     <p>[[asstring(item)]]</p>
                 </div>
