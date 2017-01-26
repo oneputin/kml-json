@@ -105,10 +105,14 @@ convert kml to geojson.
              * 
              */
             makeGeojson: function(kml, query) {
+
                 let json = {};
                 if (!kml || !Object.keys(kml).length) return json;
+
+                var tags, structure;
                 if (query) {
                     tags = query.tags;
+                    structure = query.structure;
                 }
 
                 // 1. Convert string to DOM
@@ -140,23 +144,17 @@ convert kml to geojson.
                     console.log("??Unknown Format??:", kml.documentElement.tagName, kml);
                     return;
                 }
-                if (!json.features) return;
 
+                if (!json.features) return;
                 console.log("toGEOJSON:", json);
 
                 // (Specific) output structures. 
-                if (structure == "json") {
+                if (structure == "doc") {
                     if (json.dom) delete json.dom;
                     this.geojson = json;
                     return;
-                } else if (structure == "import") {
-                    this.geojson = json;
-                    return;
                 }
-
-                // Get json-array of features
                 this.geojson = json.features;
-
             },
 
             /**
