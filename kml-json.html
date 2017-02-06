@@ -130,7 +130,7 @@ convert kml to geojson.
                     }
 
                 } else if (kml.documentElement.tagName == "gpx") {
-                    console.log("gpx:", query, kml);
+                    // console.log("gpx:", query, kml);
                     json = toGeoJSON.gpx(kml, tags);
                     if (json.features) {
                         json.dom = kml;
@@ -146,7 +146,7 @@ convert kml to geojson.
                 }
 
                 if (!json.features) return;
-                console.log("toGEOJSON:", json);
+                // console.log("toGEOJSON:", json);
 
                 // (Specific) output structures. 
                 if (structure == "doc") {
