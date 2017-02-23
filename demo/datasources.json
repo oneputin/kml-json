@@ -44,7 +44,7 @@
             "tags": "Track"
         }
     },
-
+    
     {
         "title": "kamerun-waypoints",
         "type": "gpx",
@@ -53,6 +53,56 @@
             "tags": "Waypoint"
         }
     },
+
+    {
+        "title": "tracks-2012",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Track",
+            "time": "2012"
+        }
+    },
+
+    {
+        "title": "tracks-2013-polar",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Track",
+            "time": "2013-09"
+        }
+    },
+    {
+        "title": "tracks-2013-world",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Track",
+            "time": "2013-04"
+        }
+    },
+
+    {
+        "title": "sulawesi-tracks",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Track",
+            "time": "2017"
+        }
+    },
+
+    {
+        "title": "sulawesi-waypoints",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Waypoint",
+            "time": "2017" 
+        }
+    },
+
 
     {
         "title": "praha-data",

@@ -128,70 +128,101 @@ convert kml to geojson.
             makeGeojson: function(response, query, loading) {
                 if (loading) return;  
                 // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query, response);
-                if (!response ) {
-                    this.toastMsg("No response from "+ this.url);
-                    return;
-                }    
+                this.debounce("make", function() {
+                    
+                    if (!response ) {
+                        this.toastMsg("No response from "+ this.url);
+                        return;
+                    }    
 
-                var tags, structure;
-                if (query) {
-                    tags = query.tags;
-                    structure = query.structure;
-                }
-
-                // 1. Convert string to DOM
-                var kml = (new DOMParser()).parseFromString(response, 'text/xml');
-                if (!kml) return json;
-
-                // 2. Use plugin to convert kml-DOM into geojson
-                var json = {};
-                if (kml.documentElement.tagName == "kml") {
-
-                    this.toastMsg("data converted from KML");
-
-                    json = toGeoJSON.kml(kml, tags);
-                    // console.log("kml:", kml, json);
-                    if (json.features) {
-                        json.dom = kml;
-                        json.time = Date.now();
+                    var tags, structure, timequery;
+                    if (query) {
+                        tags = query.tags;
+                        structure = query.structure;
+                        timequery = query.time;
                     }
 
-                } else if (kml.documentElement.tagName == "gpx") {
+                    // 1. Convert string to DOM
+                    var kml = (new DOMParser()).parseFromString(response, 'text/xml');
+                    if (!kml) return json;
 
-                    this.toastMsg("data converted from GPX");
+                    // 2. Use plugin to convert kml-DOM into geojson
+                    var json = {};
+                    if (kml.documentElement.tagName == "kml") {
 
-                    json = toGeoJSON.gpx(kml, tags);
-                    if (json.features) {
-                        json.dom = kml;
-                        json.time = Date.now();
+                        this.toastMsg("data converted from KML");
+
+                        json = toGeoJSON.kml(kml, tags);
+                        // console.log("kml:", kml, json);
+                        if (json.features) {
+                            json.dom = kml;
+                            json.time = Date.now();
+                        }
+
+                    } else if (kml.documentElement.tagName == "gpx") {
+
+                        this.toastMsg("data converted from GPX");
+
+                        json = toGeoJSON.gpx(kml, tags);
+                        if (json.features) {
+                            json.dom = kml;
+                            json.time = Date.now();
+                        }
+
+                    } else if (kml.documentElement.tagName == "html") {
+
+                        this.toastMsg(response); 
+                        return; 
+
+                    } else {
+
+                        this.toastMsg(response); 
+                        return;
                     }
 
-                } else if (kml.documentElement.tagName == "html") {
+                    if (!json.features) {
+                        this.toastMsg("NO features in response!"); 
+                        return;
+                    }   // console.log("JSON-RAW", json); 
 
-                    this.toastMsg(response); 
-                    return; 
+                    if (timequery) {
+                        var nall = json.features.length, 
+                            ff = [],
+                            t;
+                        json.features.forEach(function(f){
+                            t = f.properties.time;
+                            if (!t) { // cannot query 
+                                ff.push(f);
+                            } else {
+                                if (t.indexOf(timequery) >= 0) {
+                                    ff.push(f);
+                                } 
+                            }
+                        });
+                        json.features = ff; 
+                        console.log(ff.length + "/" + nall +" [" + tags + "] for t = " + timequery); // , json); 
+                    }     
 
-                } else {
+                    if (!json.features.length) return; 
 
-                    this.toastMsg(response); 
-                    return;
-                }
+                    json.time = Date.now();
+                    
+                    // (Specific) output structures. 
+                    if (structure == "doc") {
+                        this.geojson = json;
+                        return;
+                    } 
+                    if (structure == "dom") {
+                        json.dom = kml;
+                        this.geojson = json;
+                        return;
+                    } 
 
-                if (!json.features) {
-                    this.toastMsg("NO features in response!"); 
-                    return;
-                }
+                    this.geojson = json.features;
 
-                // (Specific) output structures. 
-                if (structure == "doc") {
-                    if (json.dom) delete json.dom;
-                    this.geojson = json;
-                    return;
-                }
-                
-                this.geojson = json.features;
+                    this.kml = null; // reset ???  
 
-                this.kml = null; // reset ???  
+                },1000);
             },
 
             /**
