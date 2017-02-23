@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-toast/paper-toast.html">
 
 <link rel="import" href="kml-json-api.html">
@@ -17,6 +18,10 @@ convert kml to geojson.
         :host {
           display: block;
         }
+        .yellow-button {
+            text-transform: none;
+            color: #eeff41;
+        }
       </style>
       
       <iron-ajax 
@@ -29,7 +34,8 @@ convert kml to geojson.
         debounce-duration="300">
       </iron-ajax>
 
-      <paper-toast id="toast" text="[[toastmsg]]">
+      <paper-toast id="toast" text="[[toastmsg]]" duration="[[duration]]">
+         <paper-button onclick="toast.toggle()" class="yellow-button">Close !</paper-button>
       </paper-toast>
 
     </template>
@@ -44,7 +50,7 @@ convert kml to geojson.
                  * 
                  */
                 url: {
-                    type: String  //,  value: ''
+                    type: String  ,  value: ''
                 },
 
                 /**
@@ -203,9 +209,11 @@ convert kml to geojson.
             toastMsg: function(txt) {
                 if (txt) {
                     this.toastmsg = txt; 
+                    if (txt.length > 50) this.duration = 0;
                     this.$.toast.open();                    
                     console.log("kml-json", txt); // , url)
                 }
+                this.duration = 3000;
             }
 
         });
