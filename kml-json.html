@@ -24,10 +24,14 @@ convert kml to geojson.
         url="[[url]]"
         params="[[_params]]"
         handle-as="text"
-        last-response="{{kml}}"
+        loading="{{loading}}"
+        last-response="{{response}}"
         debounce-duration="300">
       </iron-ajax>
-      <paper-toast id="toast" text="{{toastmsg}}"></paper-toast>
+
+      <paper-toast id="toast" text="[[toastmsg]]">
+      </paper-toast>
+
     </template>
 
     <script>
@@ -40,10 +44,8 @@ convert kml to geojson.
                  * 
                  */
                 url: {
-                    type: String,
-                    value: ''
+                    type: String  //,  value: ''
                 },
-
 
                 /**
                  * 
@@ -70,11 +72,19 @@ convert kml to geojson.
                     value: {}
                 },
 
+                // ajax status-flag
+                loading: {
+                    type: Boolean
+                },
+
+                toastmsg: {
+                    type: String
+                },
 
                 /**
                  * 
                  */
-                kml: {
+                response: {
                     type: String,
                     value: ""
                 },
@@ -90,7 +100,7 @@ convert kml to geojson.
             },
 
             observers: [
-                'makeGeojson(kml, query)', // , url)',
+                'makeGeojson(response, query, loading)',
                 'ajaxparams(service.*, url)',
                 'logAction(geojson.*)'
             ],
@@ -103,13 +113,19 @@ convert kml to geojson.
                 this._params = service.value; // console.log(this._params);
             },
 
-            /**
-             * 
-             */
-            makeGeojson: function(kml, query) {
 
-                let json = {};
-                if (!kml || !Object.keys(kml).length) return json;
+            /**
+             * kml : response from observer
+             * query : optional query to apply on kml-response
+             * loading : 
+             */
+            makeGeojson: function(response, query, loading) {
+                if (loading) return;  
+                // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query, response);
+                if (!response ) {
+                    this.toastMsg("No response from "+ this.url);
+                    return;
+                }    
 
                 var tags, structure;
                 if (query) {
@@ -118,43 +134,47 @@ convert kml to geojson.
                 }
 
                 // 1. Convert string to DOM
-                // 2. Use plugin to convert kml-DOM into geojson
-                kml = (new DOMParser()).parseFromString(kml, 'text/xml');
+                var kml = (new DOMParser()).parseFromString(response, 'text/xml');
                 if (!kml) return json;
-                // console.log(kml.documentElement.tagName, url);
 
+                // 2. Use plugin to convert kml-DOM into geojson
+                var json = {};
                 if (kml.documentElement.tagName == "kml") {
-                    console.log("kml:", kml);
+
+                    this.toastMsg("data converted from KML");
+
                     json = toGeoJSON.kml(kml, tags);
+                    // console.log("kml:", kml, json);
                     if (json.features) {
                         json.dom = kml;
                         json.time = Date.now();
                     }
 
                 } else if (kml.documentElement.tagName == "gpx") {
-                    // console.log("gpx:", query, kml);
+
+                    this.toastMsg("data converted from GPX");
+
                     json = toGeoJSON.gpx(kml, tags);
                     if (json.features) {
                         json.dom = kml;
                         json.time = Date.now();
                     }
+
                 } else if (kml.documentElement.tagName == "html") {
-                    // var error = kml.querySelector("parseerror");
-                    var error = "unknown html";
-                    this.toastmsg = error; 
-                    this.$.toast.open();                    
-                    console.log("html-error", error); // , url)
-                    json = {};
+
+                    this.toastMsg(response); 
                     return; 
+
                 } else {
-                    this.toastmg = "??Unknown Format??:" + kml.documentElement.tagName;
-                    this.$.toast.open();
-                    console.log(this.toastmsg, kml);
+
+                    this.toastMsg(response); 
                     return;
                 }
 
-                if (!json.features) return;
-                // console.log("toGEOJSON:", json);
+                if (!json.features) {
+                    this.toastMsg("NO features in response!"); 
+                    return;
+                }
 
                 // (Specific) output structures. 
                 if (structure == "doc") {
@@ -162,7 +182,10 @@ convert kml to geojson.
                     this.geojson = json;
                     return;
                 }
+                
                 this.geojson = json.features;
+
+                this.kml = null; // reset ???  
             },
 
             /**
@@ -172,6 +195,17 @@ convert kml to geojson.
                 if (!json || !Object.keys(json).length) return;
                 var geojson = json.value;
                 // console.log("LOG: url=" + this.url, "with", this.params, "output:", geojson);
+            },
+
+            /**
+             * 
+             */
+            toastMsg: function(txt) {
+                if (txt) {
+                    this.toastmsg = txt; 
+                    this.$.toast.open();                    
+                    console.log("kml-json", txt); // , url)
+                }
             }
 
         });
