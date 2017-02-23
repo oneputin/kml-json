@@ -74,7 +74,7 @@
         }
     },
     {
-        "title": "tracks-2013-world",
+        "title": "tracks-2013-diving",
         "type": "gpx",
         "url": "gpx/foretrex20170223.gpx",
         "query": {
@@ -89,7 +89,8 @@
         "url": "gpx/foretrex20170223.gpx",
         "query": {
             "tags": "Track",
-            "time": "2017"
+            "start": "2017-02-01",
+            "stop": "2017-02-20"
         }
     },
 

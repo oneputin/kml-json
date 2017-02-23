@@ -121,12 +121,14 @@ convert kml to geojson.
 
 
             /**
-             * kml : response from observer
-             * query : optional query to apply on kml-response
-             * loading : 
+             * response : response from observer
+             * query : optional query to apply on raw response
+             * loading : server-action-flag
              */
             makeGeojson: function(response, query, loading) {
                 if (loading) return;  
+                if (!query) query = {}; // some preliminary filtering and/or formatting 
+
                 // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query, response);
                 this.debounce("make", function() {
                     
@@ -134,13 +136,6 @@ convert kml to geojson.
                         this.toastMsg("No response from "+ this.url);
                         return;
                     }    
-
-                    var tags, structure, timequery;
-                    if (query) {
-                        tags = query.tags;
-                        structure = query.structure;
-                        timequery = query.time;
-                    }
 
                     // 1. Convert string to DOM
                     var kml = (new DOMParser()).parseFromString(response, 'text/xml');
@@ -152,7 +147,7 @@ convert kml to geojson.
 
                         this.toastMsg("data converted from KML");
 
-                        json = toGeoJSON.kml(kml, tags);
+                        json = toGeoJSON.kml(kml, query.tags);
                         // console.log("kml:", kml, json);
                         if (json.features) {
                             json.dom = kml;
@@ -163,7 +158,7 @@ convert kml to geojson.
 
                         this.toastMsg("data converted from GPX");
 
-                        json = toGeoJSON.gpx(kml, tags);
+                        json = toGeoJSON.gpx(kml, query.tags);
                         if (json.features) {
                             json.dom = kml;
                             json.time = Date.now();
@@ -185,22 +180,25 @@ convert kml to geojson.
                         return;
                     }   // console.log("JSON-RAW", json); 
 
-                    if (timequery) {
+                    if (query.time || query.start || query.stop) {
                         var nall = json.features.length, 
                             ff = [],
-                            t;
+                            t, flag;
                         json.features.forEach(function(f){
+
+                            flag = true; 
                             t = f.properties.time;
-                            if (!t) { // cannot query 
-                                ff.push(f);
-                            } else {
-                                if (t.indexOf(timequery) >= 0) {
-                                    ff.push(f);
-                                } 
+                            if (t) { 
+                                if (query.start &&  (t < query.start)) flag = false;
+                                if (query.stop &&  (t > query.stop)) flag = false
+                                if (query.time && (t.indexOf(query.time) < 0)) flag = false;
                             }
+
+                            if (flag)  ff.push(f);
+
                         });
                         json.features = ff; 
-                        console.log(ff.length + "/" + nall +" [" + tags + "] for t = " + timequery); // , json); 
+                        console.log(ff.length + "/" + nall +" queried by ", query, json); 
                     }     
 
                     if (!json.features.length) return; 
@@ -208,11 +206,11 @@ convert kml to geojson.
                     json.time = Date.now();
                     
                     // (Specific) output structures. 
-                    if (structure == "doc") {
+                    if (query.structure == "doc") {
                         this.geojson = json;
                         return;
                     } 
-                    if (structure == "dom") {
+                    if (query.structure == "dom") {
                         json.dom = kml;
                         this.geojson = json;
                         return;
