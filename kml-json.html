@@ -1,5 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+
 <link rel="import" href="kml-json-api.html">
 
 <!--
@@ -25,7 +27,7 @@ convert kml to geojson.
         last-response="{{kml}}"
         debounce-duration="300">
       </iron-ajax>
-
+      <paper-toast id="toast" text="{{toastmsg}}"></paper-toast>
     </template>
 
     <script>
@@ -137,11 +139,17 @@ convert kml to geojson.
                         json.time = Date.now();
                     }
                 } else if (kml.documentElement.tagName == "html") {
-                    var error = kml.querySelector("parseerror");
-                    console.log("error", error); // , url)
+                    // var error = kml.querySelector("parseerror");
+                    var error = "unknown html";
+                    this.toastmsg = error; 
+                    this.$.toast.open();                    
+                    console.log("html-error", error); // , url)
                     json = {};
+                    return; 
                 } else {
-                    console.log("??Unknown Format??:", kml.documentElement.tagName, kml);
+                    this.toastmg = "??Unknown Format??:" + kml.documentElement.tagName;
+                    this.$.toast.open();
+                    console.log(this.toastmsg, kml);
                     return;
                 }
 
