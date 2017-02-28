@@ -180,6 +180,7 @@ convert kml to geojson.
                         return;
                     }   // console.log("JSON-RAW", json); 
 
+                    // OPTION-1: Apply TIME-FILTER
                     if (query.time || query.start || query.stop) {
                         var nall = json.features.length, 
                             ff = [],
@@ -200,8 +201,34 @@ convert kml to geojson.
                         json.features = ff; 
                         console.log(ff.length + "/" + nall +" queried by ", query, json); 
                     }     
-
                     if (!json.features.length) return; 
+
+                    // POSTPROCESSING:
+                    //  - append "z" to properties (from 3d-coords)
+                    //   
+                    if (true) {
+                        var coords, z,
+                            coordz,
+                            coordtype = typeof json.features[0].geometry.coordinates[0];
+                        // console.log("coordinates type", coordtype);     
+                        json.features.forEach(function(f){
+                            coords = f.geometry.coordinates;
+                            if (coordtype == "number") {
+                                coordz = -999;
+                                if (coords.length == 3) { 
+                                    coordz = coords[2];
+                                } 
+                            } else {
+                                coordz = [];
+                                coords.forEach(function(cc) {
+                                    if (cc.length > 1) coordz.push(cc[2]);                                    
+                                    else coordz.push(-999);
+                                });
+                            }
+                            f.properties.coordZ = coordz;
+                        });
+                        // console.log("z copied to poperties ", json);               
+                    }
 
                     json.time = Date.now();
                     

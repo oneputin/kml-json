@@ -100,7 +100,36 @@
         "url": "gpx/foretrex20170223.gpx",
         "query": {
             "tags": "Waypoint",
+            "start": "2017-02-01",
+            "stop": "2017-02-20"
+        }
+    },
+
+    {
+        "title": "waypoints-2017",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Waypoint",
             "time": "2017" 
+        }
+    },
+    {
+        "title": "waypoints-2012",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Waypoint",
+            "time": "2012" 
+        }
+    },
+    {
+        "title": "waypoints-2013",
+        "type": "gpx",
+        "url": "gpx/foretrex20170223.gpx",
+        "query": {
+            "tags": "Waypoint",
+            "time": "2013" 
         }
     },
 
