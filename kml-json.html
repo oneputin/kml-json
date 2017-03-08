@@ -7,7 +7,7 @@
 
 <!--
 `kml-json`
-convert kml to geojson. 
+convert xml (kml, gpx) to geojson. 
 
 @demo demo/index.html 
 -->
@@ -185,6 +185,7 @@ convert kml to geojson.
                         var nall = json.features.length, 
                             ff = [],
                             t, flag;
+
                         json.features.forEach(function(f){
 
                             flag = true; 
@@ -194,55 +195,70 @@ convert kml to geojson.
                                 if (query.stop &&  (t > query.stop)) flag = false
                                 if (query.time && (t.indexOf(query.time) < 0)) flag = false;
                             }
-
                             if (flag)  ff.push(f);
-
                         });
                         json.features = ff; 
                         console.log(ff.length + "/" + nall +" queried by ", query, json); 
                     }     
-                    if (!json.features.length) return; 
+                    if (!json.features.length)  return; 
 
                     // POSTPROCESSING:
-                    //  - append "z" to properties (from 3d-coords)
-                    //   
+
+                    //  A: append separate "z" to properties (from (x,y,z)-coordinates)
                     if (true) {
-                        var coords, z,
-                            coordz,
+
+                        var coords, 
+                            z, coordzline, coordzfeature,
                             coordtype = typeof json.features[0].geometry.coordinates[0];
-                        // console.log("coordinates type", coordtype);     
+                            console.log("append z-coordinates from coord-type ["+ coordtype+"]", json);     
+
                         json.features.forEach(function(f){
-                            coords = f.geometry.coordinates;
-                            if (coordtype == "number") {
-                                coordz = -999;
-                                if (coords.length == 3) { 
-                                    coordz = coords[2];
+
+                            coords = f.geometry.coordinates; 
+
+                            if (coordtype == "number") {  // fi. gpx from garmin-tracker)
+
+                                coordzfeature = -999;
+                                if (coords.length > 2) { 
+                                    coordzfeature = coords[2];
                                 } 
-                            } else {
-                                coordz = [];
-                                coords.forEach(function(cc) {
-                                    if (cc.length > 1) coordz.push(cc[2]);                                    
-                                    else coordz.push(-999);
+
+                            } else {    // MultiLineString (fi. gpx from garmin-oregon)
+    
+                                coordzfeature = [];
+                                coords.forEach(function(coordsline) {
+                                    coordzline = [];
+                                    coordsline.forEach(function(cc){
+                                        if (cc.length > 2)  coordzline.push(cc[2]);                                    
+                                        else coordzline.push(-999);
+                                    })
+                                    coordzfeature.push(coordzline);
                                 });
                             }
-                            f.properties.coordZ = coordz;
+                            
+                            f.properties.coordZ = coordzfeature;
+                            // console.log("z copied to poperties ", f.properties);               
                         });
-                        // console.log("z copied to poperties ", json);               
                     }
 
+                    //  B: Save time of data-input 
                     json.time = Date.now();
                     
-                    // (Specific) output structures. 
+                    //  C: (Specific) output structures. 
+                    //  C1: PURE geojson  alone
                     if (query.structure == "doc") {
                         this.geojson = json;
                         return;
                     } 
+                    
+                    // C2. geojson with xml(dom)-log
                     if (query.structure == "dom") {
                         json.dom = kml;
                         this.geojson = json;
                         return;
                     } 
 
+                    // C3. geojson-features only !!
                     this.geojson = json.features;
 
                     this.kml = null; // reset ???  
