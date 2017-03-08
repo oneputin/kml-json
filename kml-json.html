@@ -7,7 +7,7 @@
 
 <!--
 `kml-json`
-convert xml (kml, gpx) to geojson. 
+convert kml to geojson. 
 
 @demo demo/index.html 
 -->
@@ -209,22 +209,16 @@ convert xml (kml, gpx) to geojson.
 
                         var coords, 
                             z, coordzline, coordzfeature,
-                            coordtype = typeof json.features[0].geometry.coordinates[0];
-                            console.log("append z-coordinates from coord-type ["+ coordtype+"]", json);     
+                            coordtype = json.features[0].geometry.type;
+                            // coordtype = typeof json.features[0].geometry.coordinates[0];
+                            // console.log("append z-coordinates to properties for coord-type ["+ coordtype+"]", json);     
 
                         json.features.forEach(function(f){
 
                             coords = f.geometry.coordinates; 
 
-                            if (coordtype == "number") {  // fi. gpx from garmin-tracker)
-
-                                coordzfeature = -999;
-                                if (coords.length > 2) { 
-                                    coordzfeature = coords[2];
-                                } 
-
-                            } else {    // MultiLineString (fi. gpx from garmin-oregon)
-    
+                            if (coordtype == "MultiLineString") {    // MultiLineString (fi. gpx from garmin-oregon)
+                                // console.log("multiline-geometry", f.geometry);
                                 coordzfeature = [];
                                 coords.forEach(function(coordsline) {
                                     coordzline = [];
@@ -234,10 +228,23 @@ convert xml (kml, gpx) to geojson.
                                     })
                                     coordzfeature.push(coordzline);
                                 });
+
+                            } else if (coordtype == "LineString")  {
+                                // console.log("line-geometry", f.geometry);
+                                coordzfeature = [];
+                                coords.forEach(function(cc){
+                                    if (cc.length > 2)  coordzfeature.push(cc[2]);                                    
+                                    else coordzfeature.push(-999);
+                                })
+                            } else {
+                                // } else if (coordtype == "Point") {  // fi. waypoints 
+                                coordzfeature = -999;
+                                if (coords.length > 2) { 
+                                    coordzfeature = coords[2];
+                                } 
                             }
-                            
+                           
                             f.properties.coordZ = coordzfeature;
-                            // console.log("z copied to poperties ", f.properties);               
                         });
                     }
 
