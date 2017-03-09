@@ -206,7 +206,7 @@ convert kml to geojson.
                         json.features = ff; 
                     }     
                     if (!json.features.length)  return; 
-                    console.log(json.features.length + "/" + nall + " "+rootTag+"-features queried by ", query, json); 
+                    // console.log(json.features.length + "/" + nall + " "+rootTag+"-features queried by ", query, json); 
 
                     // POSTPROCESSING:
 
@@ -297,7 +297,7 @@ convert kml to geojson.
                     this.toastmsg = txt; 
                     if (txt.length > 50) this.duration = 0;
                     this.$.toast.open();                    
-                    console.log("xml->json", txt); // , url)
+                    // console.log("xml->json", txt); // , url)
                 }
                 this.duration = 3000;
             }
