@@ -1,0 +1,307 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+
+<link rel="import" href="kml-json-api.html">
+
+<!--
+`kml-json`
+convert kml to geojson. 
+
+@demo demo/index.html 
+-->
+
+<dom-module id="kml-json">
+    <template>
+      <style>
+        :host {
+          display: block;
+        }
+        .yellow-button {
+            text-transform: none;
+            color: #eeff41;
+        }
+      </style>
+      
+      <iron-ajax 
+        auto
+        url="[[url]]"
+        params="[[_params]]"
+        handle-as="text"
+        loading="{{loading}}"
+        last-response="{{response}}"
+        debounce-duration="300">
+      </iron-ajax>
+
+      <paper-toast id="toast" text="[[toastmsg]]" duration="[[duration]]">
+         <paper-button onclick="toast.toggle()" class="yellow-button">Close !</paper-button>
+      </paper-toast>
+
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'kml-json',
+
+            properties: {
+                /**
+                 * 
+                 */
+                url: {
+                    type: String // ,  value: ''
+                },
+
+                /**
+                 * 
+                 */
+                _params: {
+                    type: Object,
+                    value: function() {
+                        return {};
+                    }
+                },
+
+                /**
+                 * 
+                 */
+                service: {
+                    type: Object,
+                    value: function() {
+                        return {};
+                    }
+                },
+
+                query: {
+                    type: Object,
+                    value: {}
+                },
+
+                // ajax status-flag
+                loading: {
+                    type: Boolean
+                },
+
+                toastmsg: {
+                    type: String
+                },
+
+                /**
+                 * 
+                 */
+                response: {
+                    type: String,
+                    value: ""
+                },
+
+                /**
+                 * 
+                 */
+                geojson: {
+                    type: Object,
+                    notify: true
+                },
+
+            },
+
+            observers: [
+                'makeGeojson(response, query, loading)',
+                'ajaxparams(service.*, url)',
+                'logAction(geojson.*)'
+            ],
+
+            /**
+             * 
+             */
+            ajaxparams: function(service, url) {
+                // console.log("make params from service", service.value);
+                this._params = service.value; // console.log(this._params);
+            },
+
+
+            /**
+             * response : response from observer
+             * query : optional query to apply on raw response
+             * loading : server-action-flag
+             */
+            makeGeojson: function(response, query, loading) {
+                if (loading) return;  
+                if (!query) query = {}; // some preliminary filtering and/or formatting 
+
+                // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query, response);
+                this.debounce("make", function() {
+                    
+                    if (!response ) {
+                        this.toastMsg("No response from "+ this.url);
+                        return;
+                    }    
+
+                    // 1. Convert string to DOM
+                    var xml = (new DOMParser()).parseFromString(response, 'text/xml');
+                    if (!xml) return json;
+                    var rootTag = xml.documentElement.tagName;
+                    // console.log("parse "+rootTag+"-element with query ", query); 
+
+                    // 2. Use plugin to convert kml-DOM into geojson
+                    var json = {};
+                    if ( rootTag == "kml") {
+
+                        this.toastMsg("data from KML");
+
+                        json = toGeoJSON.kml(xml, query.tags);
+                        // console.log("kml:", kml, json);
+                        if (json.features) {
+                            json.dom = kml;
+                            json.time = Date.now();
+                        }
+
+                    } else if (rootTag == "gpx") {
+
+                        this.toastMsg("data from GPX");
+
+                        json = toGeoJSON.gpx(xml, query.tags);
+                        if (json.features) {
+                            json.dom = xml;
+                            json.time = Date.now();
+                        }
+
+                    } else if (rootTag == "html") {
+
+                        this.toastMsg(response); 
+                        return; 
+
+                    } else {
+
+                        this.toastMsg(response); 
+                        return;
+                    }
+
+                    if (!json.features) {
+                        this.toastMsg("NO features in response!"); 
+                        return;
+                    }   // console.log("JSON-RAW", json); 
+
+                    // OPTION-1: Apply TIME-FILTER
+
+                    var nall = json.features.length;
+
+                    if (query.time || query.start || query.stop) {
+                        
+                        var ff = [],
+                            t, flag;
+
+                        json.features.forEach(function(f){
+
+                            flag = true; 
+                            t = f.properties.time;
+                            if (t) { 
+                                if (query.start &&  (t < query.start)) flag = false;
+                                if (query.stop &&  (t > query.stop)) flag = false
+                                if (query.time && (t.indexOf(query.time) < 0)) flag = false;
+                            }
+                            if (flag)  ff.push(f);
+                        });
+
+                        json.features = ff; 
+                    }     
+                    if (!json.features.length)  return; 
+                    console.log(json.features.length + "/" + nall + " "+rootTag+"-features queried by ", query, json); 
+
+                    // POSTPROCESSING:
+
+                    //  A: append separate "z" to properties (from (x,y,z)-coordinates)
+                    if (true) {
+
+                        var coords, 
+                            z, coordzline, coordzfeature,
+                            coordtype = json.features[0].geometry.type;
+                            // coordtype = typeof json.features[0].geometry.coordinates[0];
+                            // console.log("append z-coordinates to properties for coord-type ["+ coordtype+"]", json);     
+
+                        json.features.forEach(function(f){
+
+                            coords = f.geometry.coordinates; 
+
+                            if (coordtype == "MultiLineString") {    // MultiLineString (fi. gpx from garmin-oregon)
+                                // console.log("multiline-geometry", f.geometry);
+                                coordzfeature = [];
+                                coords.forEach(function(coordsline) {
+                                    coordzline = [];
+                                    coordsline.forEach(function(cc){
+                                        if (cc.length > 2)  coordzline.push(cc[2]);                                    
+                                        else coordzline.push(-999);
+                                    })
+                                    coordzfeature.push(coordzline);
+                                });
+
+                            } else if (coordtype == "LineString")  {
+                                // console.log("line-geometry", f.geometry);
+                                coordzfeature = [];
+                                coords.forEach(function(cc){
+                                    if (cc.length > 2)  coordzfeature.push(cc[2]);                                    
+                                    else coordzfeature.push(-999);
+                                })
+
+                            } else {
+                                // } else if (coordtype == "Point") {  // fi. waypoints 
+                                coordzfeature = -999;
+                                if (coords.length > 2) { 
+                                    coordzfeature = coords[2];
+                                } 
+                            }
+                           
+                            f.properties.coordZ = coordzfeature;
+                        });
+                    }
+
+                    //  B: Save time of data-input 
+                    json.time = Date.now();
+                    
+                    //  C: (Specific) output structures. 
+                    //  C1: PURE geojson  alone
+                    if (query.structure == "doc") {
+                        this.geojson = json;
+                        return;
+                    } 
+                    
+                    // C2. geojson with xml(dom)-log
+                    if (query.structure == "dom") {
+                        json.dom = kml;
+                        this.geojson = json;
+                        return;
+                    } 
+
+                    // C3. geojson-features only !!
+                    this.geojson = json.features;
+
+                    this.kml = null; // reset ???  
+
+                },1000);
+            },
+
+            /**
+             * 
+             */
+            logAction: function(json) {
+                if (!json || !Object.keys(json).length) return;
+                var geojson = json.value;
+                // console.log("LOG: url=" + this.url, "with", this.params, "output:", geojson);
+            },
+
+            /**
+             * 
+             */
+            toastMsg: function(txt) {
+                if (txt) {
+                    this.toastmsg = txt; 
+                    if (txt.length > 50) this.duration = 0;
+                    this.$.toast.open();                    
+                    console.log("xml->json", txt); // , url)
+                }
+                this.duration = 3000;
+            }
+
+        });
+    </script>
+</dom-module>
