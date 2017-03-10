@@ -152,7 +152,7 @@ convert kml to geojson.
                         json = toGeoJSON.kml(xml, query.tags);
                         // console.log("kml:", kml, json);
                         if (json.features) {
-                            json.dom = kml;
+                            json.dom = xml;
                             json.time = Date.now();
                         }
 
