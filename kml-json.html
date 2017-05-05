@@ -129,7 +129,7 @@ convert kml to geojson.
                 if (loading) return;  
                 if (!query) query = {}; // some preliminary filtering and/or formatting 
 
-                // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query, response);
+                // console.log("RAW RESPONSE to " + this.url, typeof response, loading, query); // , response);
                 this.debounce("make", function() {
                     
                     if (!response ) {
@@ -181,9 +181,8 @@ convert kml to geojson.
                         this.toastMsg("NO features in response!"); 
                         return;
                     }   // console.log("JSON-RAW", json); 
-
+    
                     // OPTION-1: Apply TIME-FILTER
-
                     var nall = json.features.length;
 
                     if (query.time || query.start || query.stop) {
@@ -222,7 +221,7 @@ convert kml to geojson.
                         json.features.forEach(function(f){
 
                             coords = f.geometry.coordinates; 
-
+                            coordzfeature = null;
                             if (coordtype == "MultiLineString") {    // MultiLineString (fi. gpx from garmin-oregon)
                                 // console.log("multiline-geometry", f.geometry);
                                 coordzfeature = [];
@@ -243,15 +242,16 @@ convert kml to geojson.
                                     else coordzfeature.push(-999);
                                 })
 
-                            } else {
-                                // } else if (coordtype == "Point") {  // fi. waypoints 
+                            } else if (coords) {  // fi. waypoints
+                                // } else if (coordtype == "Point") {  
                                 coordzfeature = -999;
                                 if (coords.length > 2) { 
                                     coordzfeature = coords[2];
                                 } 
                             }
-                           
-                            f.properties.coordElevs = coordzfeature;
+                            if (coordzfeature) {
+                                f.properties.coordElevs = coordzfeature;
+                            } 
                         });
                     }
 
